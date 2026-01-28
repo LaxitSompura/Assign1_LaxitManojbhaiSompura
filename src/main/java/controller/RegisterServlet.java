@@ -1,6 +1,8 @@
 package controller;
 
 import java.io.IOException;
+
+import dao.RegisterDao;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -33,7 +35,27 @@ public class RegisterServlet extends HttpServlet {
         r.setLanguage(req.getParameterValues("language"));
         r.setAbout(req.getParameter("about"));
 
-        req.setAttribute("reg", r);
-        req.getRequestDispatcher("/success.jsp").forward(req, resp);
+        RegisterDao dao = new RegisterDao();
+        int status = dao.register(r);
+
+        if (status == -1) {
+            req.setAttribute("useridError", "User id already exists. Choose another.");
+            req.getRequestDispatcher("/index.jsp").forward(req, resp);
+            return;
+        }
+
+        if (status == -2) {
+            req.setAttribute("emailError", "Email already exists. Use another email.");
+            req.getRequestDispatcher("/index.jsp").forward(req, resp);
+            return;
+        }
+
+        if (status > 0) {
+            req.setAttribute("reg", r);
+            req.getRequestDispatcher("/success.jsp").forward(req, resp);
+        } else {
+            req.setAttribute("generalError", "Registration failed. Please try again.");
+            req.getRequestDispatcher("/index.jsp").forward(req, resp);
+        }
     }
 }
